@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useContext} from "react";
+import { Button } from "@material-ui/core";
 import "./weatherclothes.css";
 import db from "../../utils/firebase";
 import { useStateValue } from "../../utils/stateProvider";
@@ -206,19 +207,9 @@ const WeatherClothes = () => {
             return (
                 <div>
                     <p style={{color: '#d32f2f', marginBottom: '10px'}}>{error}</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        style={{
-                            padding: '8px 16px',
-                            background: '#1976d2',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}
-                    >
+                    <Button onClick={() => window.location.reload()}>
                         Try Again
-                    </button>
+                    </Button>
                 </div>
             );
         }

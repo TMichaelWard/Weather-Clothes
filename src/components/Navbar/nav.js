@@ -197,9 +197,9 @@ const Navbar = () => {
                 <ul className={`nav-links ${navActive === "true" ? "nav-active" : ""}`} fadein={fadeIn} onAnimationEnd={() => {setFadeIn(0)}}>
                     
                     <li><Avatar src={user.photoURL}/></li>
-                    <li onClick={() => linkAction("/location")}>Location</li>
-                    <li onClick={() => linkAction("/wardrobe")}>Wardrobe</li>
-                    <li onClick={() => linkAction("/")}>Today's Outfit</li>
+                    <li onClick={() => { toggleNav(); window.location.href = '/location'; }}>Location</li>
+                    <li onClick={() => { toggleNav(); window.location.href = '/wardrobe'; }}>Wardrobe</li>
+                    <li onClick={() => { toggleNav(); window.location.href = '/'; }}>Today's Outfit</li>
                     <li className="how" onClick={() => {setInfoPop("block"); setInfoContent("how")}}>How to&nbsp;<img src={info} alt="info" width="15" heigh="15"/></li>
                     <li><Button id="sign-out" onClick={signOut}>Sign Out</Button></li>
 
