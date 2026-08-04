@@ -146,3 +146,25 @@ input:focus {
         transform: rotate(360deg);
     }
 }
+
+/* Submit button styling */
+.add-page button.MuiButton-root {
+    background-color: #28282a;
+    color: white;
+    padding: 10px 30px;
+    font-size: 14px;
+    border-radius: 5px;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+}
+
+.add-page button.MuiButton-root:hover {
+    background-color: #3a3a3c;
+    transform: scale(1.05);
+}
+
+.add-page button.MuiButton-root:disabled {
+    background-color: #cccccc;
+    color: #888888;
+    cursor: not-allowed;
+}

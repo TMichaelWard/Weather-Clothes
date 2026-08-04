@@ -26,19 +26,12 @@
 .nav-links > li{
   cursor: pointer;
   margin-top: 35px;
-  transition: all 0.3s ease;
+  transition: opacity 0.2s ease;
   padding: 8px 16px;
-  border-radius: 8px;
 }
 
 .nav-links > li:hover {
-  background-color: rgba(255, 255, 255, 0.5);
-  transform: translateX(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.nav-links > li:active {
-  transform: translateX(10px) scale(0.98);
+  opacity: 0.6;
 }
 
 .nav-links {

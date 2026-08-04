@@ -96,7 +96,7 @@ const W2 = () => {
 
     const editOutfit = (outfit) => {
         localStorage.setItem('editingOutfit', JSON.stringify(outfit));
-        history.push(`/add?edit=${outfit.id}`);
+        window.location.href = `/add?edit=${outfit.id}`;
     };
 
     const resetFilters = () => {
@@ -468,7 +468,7 @@ const W2 = () => {
                 marginBottom: '20px'
             }}>
                 <img src={closet} alt="closet"/><br/>
-                <IconButton onClick={() => history.push("/add")}>
+                <IconButton onClick={() => window.location.href = "/add"}>
                     <AddOutlinedIcon />
                 </IconButton>
                 <p style={{ margin: '5px 0 0 0' }}>Add Outfit</p>
