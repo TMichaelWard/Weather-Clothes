@@ -4,7 +4,7 @@ import { useStateValue } from "../../utils/stateProvider";
 import db from "../../utils/firebase";
 import { Button } from "@material-ui/core";
 import { useHistory, useLocation } from "react-router-dom";
-import { storage } from "../../utils/firebase";
+import { uploadImage } from "../../utils/supabase";
 // import { Toast } from 'react-bootstrap';
 import garmetsBck from "../../images/garmets.png";
 import { UserContext } from "../../utils/UserContext";
@@ -142,28 +142,10 @@ const AddOutfit = () => {
 
             const compressedFile = await imageCompression(processedFile, options);
 
-            // Upload compressed image to firestore storage
-            const uploadTask = storage.ref(`images/${imageFile.name}`).put(compressedFile);
-
-            // Get url of image just uploaded to firestore storage
-            uploadTask.on(
-                "state_changed",
-                snapshot => {},
-                error => {
-                    setIsProcessing(false);
-                    alert("Error uploading image. Please try again.");
-                },
-                () => {
-                    storage
-                    .ref("images")
-                    .child(imageFile.name)
-                    .getDownloadURL()
-                    .then(url => {
-                        setImgUrl(url);
-                        setIsProcessing(false);
-                    })
-                }
-            )
+            // Upload compressed image to Supabase storage
+            const url = await uploadImage(compressedFile, imageFile.name);
+            setImgUrl(url);
+            setIsProcessing(false);
         } catch (error) {
             setIsProcessing(false);
             console.error('Error processing image:', error);
