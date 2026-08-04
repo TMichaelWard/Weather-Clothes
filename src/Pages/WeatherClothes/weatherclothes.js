@@ -14,6 +14,7 @@ const WeatherClothes = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [noFits, setNoFits] = useState(false);
+    const [noMatchingWeather, setNoMatchingWeather] = useState(false);
     const {setBck, setInfoPop, setInfoContent} = useContext(UserContext);
 
     const weekDay = moment().format('dddd');
@@ -73,9 +74,10 @@ const WeatherClothes = () => {
                 }));
 
                 // Step 4: Select best outfit
-                const selectedOutfit = selectBestOutfit(outfits, todaysTemp, todaysWeather);
+                const { outfit: selectedOutfit, isExactMatch } = selectBestOutfit(outfits, todaysTemp, todaysWeather);
 
                 // Step 5: Cache and display
+                setNoMatchingWeather(!isExactMatch);
                 cacheOutfit(selectedOutfit, today);
                 setOutfit(selectedOutfit);
                 setLoading(false);
@@ -104,6 +106,7 @@ const WeatherClothes = () => {
     // Smart outfit selection logic
     const selectBestOutfit = (outfits, tempKelvin, weatherCondition) => {
         const tempF = (tempKelvin - 273.15) * 9/5 + 32;
+        let isExactMatch = true;
 
         // Filter by temperature
         let filteredOutfits = outfits.filter(fit => {
@@ -115,6 +118,7 @@ const WeatherClothes = () => {
         // If no outfits match temperature, fallback to all outfits
         if (filteredOutfits.length === 0) {
             filteredOutfits = outfits;
+            isExactMatch = false;
         }
 
         // Further filter by weather condition if outfit has weather field
@@ -141,7 +145,7 @@ const WeatherClothes = () => {
 
         // Random selection from filtered outfits
         const randomIndex = Math.floor(Math.random() * filteredOutfits.length);
-        return filteredOutfits[randomIndex];
+        return { outfit: filteredOutfits[randomIndex], isExactMatch };
     };
 
     // Cache management
@@ -223,7 +227,24 @@ const WeatherClothes = () => {
         }
 
         if (outfit && outfit.image) {
-            return <img src={outfit.image} alt="outfit" height="300px" width="auto"/>;
+            return (
+                <>
+                    {noMatchingWeather && (
+                        <p style={{
+                            color: '#f57c00',
+                            fontSize: '12px',
+                            marginBottom: '10px',
+                            background: '#fff3e0',
+                            padding: '5px 10px',
+                            borderRadius: '4px',
+                            display: 'inline-block'
+                        }}>
+                            No exact match for today's weather - showing best alternative
+                        </p>
+                    )}
+                    <img src={outfit.image} alt="outfit" height="300px" width="auto" loading="lazy"/>
+                </>
+            );
         }
 
         return null;

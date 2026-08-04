@@ -7,6 +7,9 @@ import FilterListIcon from '@material-ui/icons/FilterList';
 import SearchIcon from '@material-ui/icons/Search';
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
 import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
+import FavoriteIcon from '@material-ui/icons/Favorite';
+import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
+import SortIcon from '@material-ui/icons/Sort';
 import { IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Chip } from "@material-ui/core";
 import "./wardrobe.css";
 import hanger from "../../images/hanger.png";
@@ -19,17 +22,32 @@ const W2 = () => {
     const [{ user }] = useStateValue();
     const [outfits, setOutfits] = useState([]);
     const [filteredOutfits, setFilteredOutfits] = useState([]);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [temperatureFilter, setTemperatureFilter] = useState("all");
-    const [contextFilter, setContextFilter] = useState("all");
-    const [weatherFilter, setWeatherFilter] = useState("all");
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState(() => {
+        return localStorage.getItem('wardrobe_search') || "";
+    });
+    const [temperatureFilter, setTemperatureFilter] = useState(() => {
+        return localStorage.getItem('wardrobe_temp') || "all";
+    });
+    const [contextFilter, setContextFilter] = useState(() => {
+        return localStorage.getItem('wardrobe_context') || "all";
+    });
+    const [weatherFilter, setWeatherFilter] = useState(() => {
+        return localStorage.getItem('wardrobe_weather') || "all";
+    });
     const [showFilters, setShowFilters] = useState(false);
+    const [sortBy, setSortBy] = useState(() => {
+        return localStorage.getItem('wardrobe_sort') || "name";
+    });
     const {setBck} = useContext(UserContext);
     const carouselRef = useRef(null);
+    const touchStartX = useRef(0);
+    const touchEndX = useRef(0);
 
     // Get outfits
     useEffect(() => {
         setBck(`url(${garmetsBck})`);
+        setLoading(true);
 
         const unsubscribe = db
             .collection("wardrobe")
@@ -40,10 +58,56 @@ const W2 = () => {
                     ...doc.data()
                 }));
                 setOutfits(outfitsData);
+                setLoading(false);
             });
 
         return () => unsubscribe();
     }, [user.uid, setBck]);
+
+    // Persist filter selections
+    useEffect(() => {
+        localStorage.setItem('wardrobe_search', searchTerm);
+        localStorage.setItem('wardrobe_temp', temperatureFilter);
+        localStorage.setItem('wardrobe_context', contextFilter);
+        localStorage.setItem('wardrobe_weather', weatherFilter);
+        localStorage.setItem('wardrobe_sort', sortBy);
+    }, [searchTerm, temperatureFilter, contextFilter, weatherFilter, sortBy]);
+
+    // Keyboard navigation for carousel
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Don't trigger if typing in search box
+            if (e.target.tagName === 'INPUT') return;
+
+            if (e.key === 'ArrowLeft') {
+                scrollPrev();
+            } else if (e.key === 'ArrowRight') {
+                scrollNext();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    // Touch swipe handlers
+    const handleTouchStart = (e) => {
+        touchStartX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = (e) => {
+        touchEndX.current = e.changedTouches[0].clientX;
+        const diff = touchStartX.current - touchEndX.current;
+        const minSwipeDistance = 50;
+
+        if (Math.abs(diff) > minSwipeDistance) {
+            if (diff > 0) {
+                scrollNext(); // Swipe left = next
+            } else {
+                scrollPrev(); // Swipe right = prev
+            }
+        }
+    };
 
     // Filter and search logic
     useEffect(() => {
@@ -76,8 +140,19 @@ const W2 = () => {
             result = result.filter(outfit => outfit.weather === weatherFilter);
         }
 
+        // Sort results
+        result.sort((a, b) => {
+            switch (sortBy) {
+                case 'favorites':
+                    return (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0);
+                case 'name':
+                default:
+                    return (a.outfit || '').localeCompare(b.outfit || '');
+            }
+        });
+
         setFilteredOutfits(result);
-    }, [searchTerm, temperatureFilter, contextFilter, weatherFilter, outfits]);
+    }, [searchTerm, temperatureFilter, contextFilter, weatherFilter, outfits, sortBy]);
 
     const removeFit = async (outfitId, outfitName, imageUrl) => {
         const confirmDl = window.confirm(`Delete "${outfitName}"?`);
@@ -105,6 +180,16 @@ const W2 = () => {
     const editOutfit = (outfit) => {
         localStorage.setItem('editingOutfit', JSON.stringify(outfit));
         window.location.href = `/add?edit=${outfit.id}`;
+    };
+
+    const toggleFavorite = async (outfitId, currentFavorite) => {
+        try {
+            await db.collection("wardrobe").doc(outfitId).update({
+                favorite: !currentFavorite
+            });
+        } catch (error) {
+            console.error("Error toggling favorite:", error);
+        }
     };
 
     const resetFilters = () => {
@@ -159,6 +244,8 @@ const W2 = () => {
                 <div
                     ref={carouselRef}
                     className="mySwiper"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
                     style={{
                         display: 'flex',
                         overflowX: 'auto',
@@ -174,7 +261,12 @@ const W2 = () => {
                         msOverflowStyle: 'none'
                     }}
                 >
-                {displayOutfits && displayOutfits.length > 0 ? (
+                {loading ? (
+                    <div style={{ width: '100%', textAlign: 'center', padding: '40px' }}>
+                        <span style={{ fontSize: '24px', animation: 'spin 1s linear infinite', display: 'inline-block' }}>⚙️</span>
+                        <p style={{ marginTop: '10px', color: '#666' }}>Loading outfits...</p>
+                    </div>
+                ) : displayOutfits && displayOutfits.length > 0 ? (
                     displayOutfits.map(outfit => (
                         <div key={outfit.id} className="swiper-slide" style={{
                             flex: '0 0 auto',
@@ -203,7 +295,7 @@ const W2 = () => {
                                 <img src={hanger} alt="hanger" width="25" height="25" id="hang"/>
                             </IconButton>
 
-                            {/* Edit button overlay - always visible */}
+                            {/* Action buttons overlay - always visible */}
                             <div
                                 className="edit-icon-overlay"
                                 style={{
@@ -214,6 +306,22 @@ const W2 = () => {
                                     gap: '5px'
                                 }}
                             >
+                                <IconButton
+                                    size="small"
+                                    onClick={() => toggleFavorite(outfit.id, outfit.favorite)}
+                                    title={outfit.favorite ? "Remove from favorites" : "Add to favorites"}
+                                    style={{
+                                        background: 'rgba(255,255,255,0.9)',
+                                        padding: '5px',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                                    }}
+                                >
+                                    {outfit.favorite ? (
+                                        <FavoriteIcon style={{ width: '16px', height: '16px', color: '#e91e63' }} />
+                                    ) : (
+                                        <FavoriteBorderIcon style={{ width: '16px', height: '16px' }} />
+                                    )}
+                                </IconButton>
                                 <IconButton
                                     size="small"
                                     onClick={() => editOutfit(outfit)}
@@ -233,6 +341,7 @@ const W2 = () => {
                                 src={outfit.image}
                                 alt="outfit"
                                 id="fit-pic"
+                                loading="lazy"
                                 style={{
                                     width: '100%',
                                     maxHeight: '500px',
@@ -321,6 +430,21 @@ const W2 = () => {
                 </IconButton>
             </div>
 
+            {/* Outfit count */}
+            {!loading && (
+                <p style={{
+                    textAlign: 'center',
+                    margin: '5px 0',
+                    fontSize: '14px',
+                    color: '#666'
+                }}>
+                    {displayOutfits.length} outfit{displayOutfits.length !== 1 ? 's' : ''}
+                    {(searchTerm || activeFiltersCount > 0) && outfits.length !== displayOutfits.length &&
+                        ` (of ${outfits.length} total)`
+                    }
+                </p>
+            )}
+
             {/* Floating transparent search bar */}
             <div style={{
                 paddingTop: '10px',
@@ -350,6 +474,23 @@ const W2 = () => {
                         backdropFilter: 'blur(10px)'
                     }}
                 />
+
+                {/* Sort dropdown */}
+                <FormControl variant="outlined" size="small" style={{ minWidth: 100 }}>
+                    <Select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        style={{
+                            fontSize: '13px',
+                            background: 'rgba(255, 255, 255, 0.85)',
+                            backdropFilter: 'blur(10px)'
+                        }}
+                        startAdornment={<SortIcon style={{ fontSize: '16px', marginRight: '4px', color: '#666' }} />}
+                    >
+                        <MenuItem value="name">A-Z</MenuItem>
+                        <MenuItem value="favorites">Favorites</MenuItem>
+                    </Select>
+                </FormControl>
 
                 {/* Compact Filter Toggle */}
                 <IconButton
