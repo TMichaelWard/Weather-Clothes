@@ -8,12 +8,12 @@ import SearchIcon from '@material-ui/icons/Search';
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
 import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 import { IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Chip } from "@material-ui/core";
-import { useHistory } from "react-router-dom";
 import "./wardrobe.css";
 import hanger from "../../images/hanger.png";
 import closet from "../../images/closet.png";
 import { UserContext } from "../../utils/UserContext";
 import garmetsBck from "../../images/garmets.png";
+import { deleteImage } from "../../utils/supabase";
 
 const W2 = () => {
     const [{ user }] = useStateValue();
@@ -24,7 +24,6 @@ const W2 = () => {
     const [contextFilter, setContextFilter] = useState("all");
     const [weatherFilter, setWeatherFilter] = useState("all");
     const [showFilters, setShowFilters] = useState(false);
-    const history = useHistory();
     const {setBck} = useContext(UserContext);
     const carouselRef = useRef(null);
 
@@ -80,17 +79,26 @@ const W2 = () => {
         setFilteredOutfits(result);
     }, [searchTerm, temperatureFilter, contextFilter, weatherFilter, outfits]);
 
-    const removeFit = (outfitId, outfitName) => {
+    const removeFit = async (outfitId, outfitName, imageUrl) => {
         const confirmDl = window.confirm(`Delete "${outfitName}"?`);
 
         if (confirmDl) {
-            db.collection("wardrobe")
-                .doc(outfitId)
-                .delete()
-                .catch((error) => {
-                    console.error("Error removing outfit:", error);
-                    alert("Error removing outfit. Please try again.");
-                });
+            try {
+                // Delete from Firebase
+                await db.collection("wardrobe").doc(outfitId).delete();
+
+                // Delete image from Supabase storage
+                if (imageUrl) {
+                    try {
+                        await deleteImage(imageUrl);
+                    } catch (imgError) {
+                        console.warn("Could not delete image:", imgError);
+                    }
+                }
+            } catch (error) {
+                console.error("Error removing outfit:", error);
+                alert("Error removing outfit. Please try again.");
+            }
         }
     };
 
@@ -185,7 +193,7 @@ const W2 = () => {
 
                             {/* Delete button - exact master style */}
                             <IconButton
-                                onClick={() => removeFit(outfit.id, outfit.outfit)}
+                                onClick={() => removeFit(outfit.id, outfit.outfit, outfit.image)}
                                 style={{
                                     display: 'block',
                                     margin: '0 auto 10px',

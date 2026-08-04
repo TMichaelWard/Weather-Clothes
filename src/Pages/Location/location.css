@@ -41,17 +41,31 @@
     outline: none;
 }
 
-.enter-city > div > button {
+/* Submit button styling */
+.enter-city button.MuiButton-root {
+    background-color: #28282a;
+    color: white;
+    padding: 10px 30px;
+    font-size: 14px;
+    border-radius: 5px;
+    margin-top: 15px;
     transition: all 0.3s ease;
 }
 
-.enter-city > div > button:hover:not(:disabled) {
+.enter-city button.MuiButton-root:hover:not(:disabled) {
+    background-color: #3a3a3c;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
-.enter-city > div > button:active:not(:disabled) {
+.enter-city button.MuiButton-root:active:not(:disabled) {
     transform: translateY(0);
+}
+
+.enter-city button.MuiButton-root:disabled {
+    background-color: #cccccc;
+    color: #888888;
+    cursor: not-allowed;
 }
 
 /* Animation Keyframes */

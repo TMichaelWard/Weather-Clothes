@@ -3,7 +3,6 @@ import "./nav.css";
 import SettingsSharpIcon from '@material-ui/icons/SettingsSharp';
 import { IconButton, Avatar } from "@material-ui/core";
 import { useStateValue } from "../../utils/stateProvider";
-import { useHistory } from "react-router-dom";
 // import moment from "moment";
 import { auth } from "../../utils/firebase";
 import { Button } from "@material-ui/core";
@@ -21,7 +20,6 @@ const Navbar = () => {
     const [navActive, setNavActive] = useState("false");
     // Determine annimation
     const [fadeIn, setFadeIn] = useState(0);
-    const history = useHistory();
     const [location, setLocation] = useState();
     const [todaysTemp, setTodaysTemp] = useState();
     const [todayDescript, setTodayDescript] = useState();
@@ -83,33 +81,6 @@ const Navbar = () => {
             setFadeIn(1)
         }
 
-    };
-
-    // Click handle events for nav links
-    const linkAction = (link) => {
-
-        switch (link) {
-            case "/":
-                history.push("/")
-                break;
-
-            case "/wardrobe":
-                history.push("/wardrobe")
-                break;
-
-            case "/add":
-                history.push("/add")
-                break;
-            
-            case "/location":
-                history.push("/location")
-                break;    
-        
-            default:
-                break;
-        }
-        
-        toggleNav();
     };
 
     // Convert kelvin temp to fahrenheit

@@ -10,7 +10,7 @@ export const uploadImage = async (file, fileName) => {
   const fileExt = fileName.split('.').pop();
   const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from('outfits')
     .upload(uniqueName, file, {
       cacheControl: '3600',
