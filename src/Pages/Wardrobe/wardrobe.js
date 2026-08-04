@@ -7,9 +7,6 @@ import FilterListIcon from '@material-ui/icons/FilterList';
 import SearchIcon from '@material-ui/icons/Search';
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
 import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
-import FavoriteIcon from '@material-ui/icons/Favorite';
-import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
-import SortIcon from '@material-ui/icons/Sort';
 import { IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Chip } from "@material-ui/core";
 import "./wardrobe.css";
 import hanger from "../../images/hanger.png";
@@ -36,9 +33,6 @@ const W2 = () => {
         return localStorage.getItem('wardrobe_weather') || "all";
     });
     const [showFilters, setShowFilters] = useState(false);
-    const [sortBy, setSortBy] = useState(() => {
-        return localStorage.getItem('wardrobe_sort') || "name";
-    });
     const {setBck} = useContext(UserContext);
     const carouselRef = useRef(null);
     const touchStartX = useRef(0);
@@ -70,8 +64,7 @@ const W2 = () => {
         localStorage.setItem('wardrobe_temp', temperatureFilter);
         localStorage.setItem('wardrobe_context', contextFilter);
         localStorage.setItem('wardrobe_weather', weatherFilter);
-        localStorage.setItem('wardrobe_sort', sortBy);
-    }, [searchTerm, temperatureFilter, contextFilter, weatherFilter, sortBy]);
+    }, [searchTerm, temperatureFilter, contextFilter, weatherFilter]);
 
     // Keyboard navigation for carousel
     useEffect(() => {
@@ -140,19 +133,11 @@ const W2 = () => {
             result = result.filter(outfit => outfit.weather === weatherFilter);
         }
 
-        // Sort results
-        result.sort((a, b) => {
-            switch (sortBy) {
-                case 'favorites':
-                    return (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0);
-                case 'name':
-                default:
-                    return (a.outfit || '').localeCompare(b.outfit || '');
-            }
-        });
+        // Sort results alphabetically
+        result.sort((a, b) => (a.outfit || '').localeCompare(b.outfit || ''));
 
         setFilteredOutfits(result);
-    }, [searchTerm, temperatureFilter, contextFilter, weatherFilter, outfits, sortBy]);
+    }, [searchTerm, temperatureFilter, contextFilter, weatherFilter, outfits]);
 
     const removeFit = async (outfitId, outfitName, imageUrl) => {
         const confirmDl = window.confirm(`Delete "${outfitName}"?`);
@@ -180,16 +165,6 @@ const W2 = () => {
     const editOutfit = (outfit) => {
         localStorage.setItem('editingOutfit', JSON.stringify(outfit));
         window.location.href = `/add?edit=${outfit.id}`;
-    };
-
-    const toggleFavorite = async (outfitId, currentFavorite) => {
-        try {
-            await db.collection("wardrobe").doc(outfitId).update({
-                favorite: !currentFavorite
-            });
-        } catch (error) {
-            console.error("Error toggling favorite:", error);
-        }
     };
 
     const resetFilters = () => {
@@ -295,7 +270,7 @@ const W2 = () => {
                                 <img src={hanger} alt="hanger" width="25" height="25" id="hang"/>
                             </IconButton>
 
-                            {/* Action buttons overlay - always visible */}
+                            {/* Edit button overlay - always visible */}
                             <div
                                 className="edit-icon-overlay"
                                 style={{
@@ -306,22 +281,6 @@ const W2 = () => {
                                     gap: '5px'
                                 }}
                             >
-                                <IconButton
-                                    size="small"
-                                    onClick={() => toggleFavorite(outfit.id, outfit.favorite)}
-                                    title={outfit.favorite ? "Remove from favorites" : "Add to favorites"}
-                                    style={{
-                                        background: 'rgba(255,255,255,0.9)',
-                                        padding: '5px',
-                                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                                    }}
-                                >
-                                    {outfit.favorite ? (
-                                        <FavoriteIcon style={{ width: '16px', height: '16px', color: '#e91e63' }} />
-                                    ) : (
-                                        <FavoriteBorderIcon style={{ width: '16px', height: '16px' }} />
-                                    )}
-                                </IconButton>
                                 <IconButton
                                     size="small"
                                     onClick={() => editOutfit(outfit)}
@@ -474,23 +433,6 @@ const W2 = () => {
                         backdropFilter: 'blur(10px)'
                     }}
                 />
-
-                {/* Sort dropdown */}
-                <FormControl variant="outlined" size="small" style={{ minWidth: 100 }}>
-                    <Select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        style={{
-                            fontSize: '13px',
-                            background: 'rgba(255, 255, 255, 0.85)',
-                            backdropFilter: 'blur(10px)'
-                        }}
-                        startAdornment={<SortIcon style={{ fontSize: '16px', marginRight: '4px', color: '#666' }} />}
-                    >
-                        <MenuItem value="name">A-Z</MenuItem>
-                        <MenuItem value="favorites">Favorites</MenuItem>
-                    </Select>
-                </FormControl>
 
                 {/* Compact Filter Toggle */}
                 <IconButton
