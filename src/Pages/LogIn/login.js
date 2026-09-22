@@ -51,7 +51,7 @@ const LogIn = () => {
 
     },[])
 
-    const [dispatch] = useStateValue();
+    const [, dispatch] = useStateValue();
 
     const signIn = () => {
 

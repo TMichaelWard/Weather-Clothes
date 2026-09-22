@@ -41,13 +41,12 @@ const Location = () => {
 
         db
         .collection("city")
+        .where('uid', '==', user.uid)
         .get()
         .then((querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-
-                setId(doc.id)
-
-            });
+            if (!querySnapshot.empty) {
+                setId(querySnapshot.docs[0].id);
+            }
         });
 
     //eslint-disable-next-line

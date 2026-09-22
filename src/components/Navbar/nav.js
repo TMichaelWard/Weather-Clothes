@@ -155,7 +155,7 @@ const Navbar = () => {
                                 }
                                 else {
 
-                                    return 0
+                                    return null
 
                                 }
                                 })()
