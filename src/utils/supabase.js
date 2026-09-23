@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+// Supabase config - anon key is safe to expose (it's public by design)
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://ywidcejdgtbjyyannprl.supabase.co';
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3aWRjZWpkZ3Rianl5YW5ucHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NzE0ODgsImV4cCI6MjEwMTQ0NzQ4OH0.DzGbE4uWzgNHvDGLxHqHgF96qTDxrTkG9IpcIBciKDU';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
